@@ -71,11 +71,12 @@ def login_required(f):
         return f(*args, **kwargs)
     return wrapper
 
-def make_token(user, minutes=30):
+def make_token(user, minutes=30, purpose="access"):
     now = datetime.datetime.now(datetime.timezone.utc)
     payload = {
         "sub": str(user["id"]),
         "email": user["email"],
+        "purpose": purpose,          # "access" = full login, "2fa" = half-finished login
         "iat": now,
         "exp": now + datetime.timedelta(minutes=minutes),
     }
@@ -376,8 +377,13 @@ def api_login():
 
     if user and bcrypt.checkpw(password.encode(), user["password_hash"]):
         if user["totp_enabled"]:
-            conn.close()
-            return jsonify(error="This account uses 2FA. API support comes in Step 2."), 403
+            # password is right, but the code is still needed.
+            # do NOT reset failed_attempts here, only after the code passes
+                 conn.close()
+                 return jsonify(
+                    two_factor_required=True,
+                    temp_token=make_token(user, minutes=5, purpose="2fa"),
+            )
         conn.execute(
             "UPDATE users SET failed_attempts = 0, locked_until = 0 WHERE id = ?",
             (user["id"],),
@@ -403,6 +409,55 @@ def api_login():
     conn.close()
     return jsonify(error="Invalid email or password."), 401
 
+@app.route("/api/login/2fa", methods=["POST"])
+@limiter.limit("10 per minute")
+def api_login_2fa():
+    data = request.get_json(silent=True) or {}
+    temp_token = str(data.get("temp_token", ""))
+    code = str(data.get("code", "")).strip()
+    now = time.time()
+
+    claims = read_token(temp_token)
+    if not claims or claims.get("purpose") != "2fa":
+        return jsonify(error="Invalid or expired temporary token. Log in again."), 401
+
+    conn = get_db()
+    user = conn.execute(
+        "SELECT * FROM users WHERE id = ?", (int(claims["sub"]),)
+    ).fetchone()
+
+    if not user or not user["totp_enabled"]:
+        conn.close()
+        return jsonify(error="Invalid or expired temporary token. Log in again."), 401
+
+    if user["locked_until"] > now:
+        conn.close()
+        return jsonify(error="Account locked. Try again later."), 423
+
+    if pyotp.TOTP(user["totp_secret"]).verify(code, valid_window=1):
+        conn.execute(
+            "UPDATE users SET failed_attempts = 0, locked_until = 0 WHERE id = ?",
+            (user["id"],),
+        )
+        conn.commit()
+        conn.close()
+        return jsonify(token=make_token(user))   # the real token, purpose "access"
+
+    # wrong code counts toward the same lockout as wrong passwords
+    failed = user["failed_attempts"] + 1
+    if failed >= MAX_FAILED:
+        conn.execute(
+            "UPDATE users SET failed_attempts = 0, locked_until = ? WHERE id = ?",
+            (now + LOCK_SECONDS, user["id"]),
+        )
+    else:
+        conn.execute(
+            "UPDATE users SET failed_attempts = ? WHERE id = ?",
+            (failed, user["id"]),
+        )
+    conn.commit()
+    conn.close()
+    return jsonify(error="Wrong code."), 401
 
 @app.route("/api/verify", methods=["GET"])
 def api_verify():
@@ -411,7 +466,7 @@ def api_verify():
         return jsonify(valid=False, error="Missing token."), 401
 
     claims = read_token(header[7:])
-    if not claims:
+    if not claims or claims.get("purpose") != "access":
         return jsonify(valid=False, error="Invalid or expired token."), 401
 
     return jsonify(valid=True, user_id=claims["sub"], email=claims["email"])
