@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Dashboard</h2>
+{% if just_enabled %}<div class="msg">2FA is now enabled on your account.</div>{% endif %}
+<div class="msg">Welcome, <b>{{ email }}</b>.<br>
+2FA: {% if twofa %}<b style="color:#00ffaa;">ON</b>{% else %}<b style="color:#ff5c5c;">OFF</b>{% endif %}
+</div>
+{% if not twofa %}
+<a href="/setup-2fa"><button type="button" style="margin-bottom:10px;">Enable 2FA</button></a>
+{% endif %}
+<form method="POST" action="/logout">
+    <button type="submit">Log out</button>
+</form>
+{% endblock %}

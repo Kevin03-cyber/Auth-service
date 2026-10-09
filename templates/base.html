@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auth System</title>
+    <style>
+        body { background:#0b0b10; color:#e8e8f0; font-family:Segoe UI,sans-serif;
+               display:flex; justify-content:center; align-items:center; height:100vh; margin:0; }
+        .card { background:#15151f; padding:36px; border-radius:14px; width:320px;
+                box-shadow:0 0 25px rgba(0,255,170,0.12); }
+        h2 { margin-top:0; color:#00ffaa; }
+        input { width:100%; padding:11px; margin:8px 0 14px; border-radius:8px; border:1px solid #2a2a3a;
+                background:#0f0f18; color:#fff; box-sizing:border-box; }
+        button { width:100%; padding:11px; border:none; border-radius:8px; background:#00ffaa;
+                 color:#000; font-weight:bold; cursor:pointer; }
+        .msg { background:#1f1f2e; padding:10px; border-radius:8px; margin-bottom:14px; font-size:14px; }
+        a { color:#00ffaa; }
+        p.small { font-size:14px; text-align:center; margin-bottom:0; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

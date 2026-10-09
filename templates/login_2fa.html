@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Two-factor code</h2>
+{% if message %}<div class="msg">{{ message }}</div>{% endif %}
+<p style="font-size:14px;">Open Google Authenticator and enter the 6-digit code for <b>Kevin Auth</b>.</p>
+<form method="POST">
+    <input type="text" name="code" placeholder="123456" maxlength="6" pattern="[0-9]{6}" autocomplete="off" required autofocus>
+    <button type="submit">Verify</button>
+</form>
+<p class="small"><a href="/login">Back to login</a></p>
+{% endblock %}

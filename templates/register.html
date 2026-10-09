@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Create account</h2>
+{% if message %}<div class="msg">{{ message }}</div>{% endif %}
+<form method="POST">
+    <input type="email" name="email" placeholder="Email" required>
+    <input type="password" name="password" placeholder="Password (min 8 chars)" required>
+    <button type="submit">Register</button>
+</form>
+<p class="small">Already have an account? <a href="/login">Log in</a></p>
+{% endblock %}

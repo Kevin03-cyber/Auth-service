@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Set up 2FA</h2>
+{% if message %}<div class="msg">{{ message }}</div>{% endif %}
+<p style="font-size:14px;">1. Open Google Authenticator and tap <b>+</b> then <b>Scan a QR code</b>.</p>
+<div style="background:#fff; padding:10px; border-radius:10px; text-align:center; margin-bottom:12px;">
+    <img src="data:image/png;base64,{{ qr }}" style="width:200px; height:200px;">
+</div>
+<p style="font-size:12px; opacity:.8;">Can't scan? Enter this key manually:<br>
+<code style="color:#00ffaa; word-break:break-all;">{{ secret }}</code></p>
+<p style="font-size:14px;">2. Type the 6-digit code shown in the app:</p>
+<form method="POST">
+    <input type="text" name="code" placeholder="123456" maxlength="6" pattern="[0-9]{6}" required>
+    <button type="submit">Verify and enable</button>
+</form>
+<p class="small"><a href="/dashboard">Cancel</a></p>
+{% endblock %}
