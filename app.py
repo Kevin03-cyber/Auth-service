@@ -9,6 +9,7 @@ import pyotp
 import qrcode
 import os
 import secrets
+from flask_cors import CORS
 from functools import wraps
 from flask import (Flask, render_template, request, redirect,
                    url_for, session, jsonify)
@@ -29,7 +30,7 @@ LOCK_SECONDS = 300       # set to 60 while testing
 PRE_2FA_SECONDS = 300    # time allowed to type the code after the password
 
 limiter = Limiter(get_remote_address, app=app, storage_uri="memory://")
-
+CORS(app, resources={r"/api/*": {"origins": ["http://127.0.0.1:5002"]}})
 
 def get_db():
     conn = sqlite3.connect(DB)
