@@ -4,7 +4,7 @@ A reusable authentication service built with **Flask** and **SQLite**. It has a 
 
 This is the service version of my original web-only project: [auth-system](https://github.com/Kevin03-cyber/auth-system).
 
-## 📸 Screenshots
+## 📸 Screenshots(to be added)
 
 | Register | Login |
 |---|---|
